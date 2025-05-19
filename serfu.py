@@ -5,7 +5,7 @@ import requests
 import json
 
 # === CONFIG ===
-SERVER_URL = "https://server-evn1.onrender.com"
+SERVER_URL = "https://sarfu.onrender.com"
 GLOBAL_PASSWORD = "sarfu123"
 
 # === COLOR CODES ===
