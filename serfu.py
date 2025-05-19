@@ -7,7 +7,7 @@ import sys
 
 init(autoreset=True)
 
-SERVER_URL = "https://server-evn1.onrender.com"
+SERVER_URL = "https://sarfu.onrender.com"
 GITHUB_APPROVAL_URL = "https://raw.githubusercontent.com/aryan110011/sarfu/main/aproval.txt"
 
 # Stylized Red Logo
