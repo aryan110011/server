@@ -1,97 +1,135 @@
+import os
 import requests
 import time
-import json
-import os
-from dotenv import load_dotenv
-from getpass import getpass
+from datetime import datetime
+from colorama import Fore, Style, init
+import sys
 
-# Load .env
-load_dotenv()
-SERVER_URL = os.getenv("SERVER_URL")
+init(autoreset=True)
 
-# Terminal colors
-RED = "\033[91m"
-GREEN = "\033[92m"
-YELLOW = "\033[93m"
-BLUE = "\033[94m"
-RESET = "\033[0m"
+SERVER_URL = "https://server-evn1.onrender.com"
+GITHUB_APPROVAL_URL = "https://raw.githubusercontent.com/aryan110011/sarfu/main/aproval.txt"
 
+# Stylized Red Logo
 def print_logo():
-    print(RED + r"""
-████████╗███████╗██████╗ ███╗   ███╗██╗   ██╗██╗   ██╗
-╚══██╔══╝██╔════╝██╔══██╗████╗ ████║██║   ██║██║   ██╔╝
-   ██║   █████╗  ██████╔╝██╔████╔██║██║   ██║█████╔╝  
-   ██║   ██╔══╝  ██╔═══╝ ██║╚██╔╝██║██║   ██║██╔═██╗  
-   ██║   ███████╗██║     ██║ ╚═╝ ██║╚██████╔╝██║  ██╗
-   ╚═╝   ╚══════╝╚═╝     ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝
-""" + RESET)
+    logo = f"""{Fore.RED}
+                  __                    _ _           
+                 / _|                  | | |          
+  ___  __ _ _ __| |_ _   _   _ __ _   _| | | _____  __
+ / __|/ _` | '__|  _| | | | | '__| | | | | |/ _ \ \/ /
+ \__ \ (_| | |  | | | |_| | | |  | |_| | | |  __/>  < 
+ |___/\__,_|_|  |_|  \__,_| |_|   \__,_|_|_|\___/_/\_\\
+                                                      
+    """
+    for line in logo.splitlines():
+        print(line)
+        time.sleep(0.03)
 
+# Display login time in Yellow
+def show_login_time():
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"{Fore.YELLOW}Login Time: {now}")
+
+# Warning Note - Stylish Line by Line
+def show_warning_note():
+    lines = [
+        f"{Fore.RED}[!] Warning: Unauthorized access is strictly prohibited!",
+        f"{Fore.MAGENTA}[!] If anyone tries to use someone else's account, their approval will be removed.",
+        f"{Fore.CYAN}[!] Abusing this tool may result in permanent ban.",
+        f"{Fore.GREEN}[✔] This tool is made only for legends.",
+        f"{Fore.YELLOW}\n       ~ Made by ArYan.x3\n"
+    ]
+    for line in lines:
+        print(line)
+        time.sleep(0.4)
+
+# GitHub Approval Check
+def check_approval(username, password):
+    try:
+        res = requests.get(GITHUB_APPROVAL_URL)
+        if res.status_code == 200:
+            data = res.text.splitlines()
+            creds = [line.strip().split("|") for line in data if "|" in line]
+            return [username, password] in creds
+        else:
+            print(Fore.RED + "[!] Failed to fetch approval list.")
+            return False
+    except:
+        print(Fore.RED + "[!] Network error during approval check.")
+        return False
+
+# Menu
 def main_menu():
-    print_logo()
-    login_time = time.strftime("%Y-%m-%d %H:%M:%S")
-    print(f"{YELLOW}Login Time: {login_time}{RESET}")
-
-    password = getpass(f"{BLUE}Password: {RESET}")
-    if password != "admin123":  # Optional: move to .env if needed
-        print(RED + "❌ Wrong password. Access denied." + RESET)
-        return
-
     while True:
-        print(f"\n{BLUE}--- Main Menu ---{RESET}")
-        print("1. Start Convo")
-        print("2. View Convo")
-        print("3. Resume Convo")
-        print("4. Stop Convo")
-        print("5. Exit")
-        choice = input(f"{GREEN}Enter your choice (1-5): {RESET}")
+        print(Fore.CYAN + "\n======== Main Menu ========")
+        print(f"{Fore.GREEN}[1] Start New Conversation")
+        print(f"{Fore.YELLOW}[2] View Active Conversations")
+        print(f"{Fore.MAGENTA}[3] Resume Previous Conversation")
+        print(f"{Fore.RED}[4] Stop Conversation")
+        print(f"{Fore.BLUE}[0] Exit")
 
+        choice = input(Fore.WHITE + "\nEnter your choice: ").strip()
         if choice == "1":
-            start_convo()
+            start_new_conversation()
         elif choice == "2":
-            view_convos()
+            view_active_convos()
         elif choice == "3":
-            resume_convo()
+            resume_previous_convo()
         elif choice == "4":
             stop_convo()
-        elif choice == "5":
-            print(GREEN + "✅ Exiting... Thank you!" + RESET)
+        elif choice == "0":
+            print(Fore.GREEN + "Goodbye!")
             break
         else:
-            print(RED + "❌ Invalid choice. Try again." + RESET)
+            print(Fore.RED + "Invalid choice. Try again.")
 
-def start_convo():
-    convo_type = input(f"{BLUE}Single or Multi (single/multi): {RESET}").lower()
+# Start New Conversation
+def start_new_conversation():
+    convo_type = input("\nSingle or Multi login (single/multi): ").strip().lower()
     accounts = []
 
     if convo_type == "multi":
-        count = int(input("How many accounts: "))
-        for i in range(count):
-            print(f"{GREEN}Account {i+1}:{RESET}")
-            name = input(" Name: ")
-            token = input(" Token: ")
-            cookie = input(" Cookie: ")
-            accounts.append({"name": name, "token": token, "cookie": cookie})
+        file_path = input("Enter file path for tokens/cookies: ")
+        try:
+            with open(file_path, "r") as f:
+                lines = [x.strip() for x in f.readlines() if x.strip()]
+                for line in lines:
+                    parts = line.split("|")
+                    if len(parts) == 2:
+                        token, cookie = parts
+                        accounts.append({"token": token, "cookie": cookie})
+                    elif len(parts) == 1:
+                        accounts.append({"token": parts[0], "cookie": ""})
+        except:
+            print(Fore.RED + "[!] Error reading file.")
+            return
     else:
-        name = input("Account Name: ")
-        token = input("Token: ")
-        cookie = input("Cookie: ")
-        accounts.append({"name": name, "token": token, "cookie": cookie})
+        token = input("Enter token: ")
+        cookie = input("Enter cookie (optional): ")
+        accounts.append({"token": token, "cookie": cookie})
 
-    group_count = int(input("How many groups: "))
-    group_ids = [input(f"Group UID {i+1}: ") for i in range(group_count)]
+    print(Fore.CYAN + f"\n✅ Total Accounts Loaded: {len(accounts)}")
+
+    group_count = int(input("How many Messenger Group UIDs: "))
+    group_ids = [input(f" Group UID {i+1}: ") for i in range(group_count)]
 
     hatter_name = input("Hatter Name: ")
-    message_mode = input("Message Mode (file/single): ").lower()
+    msg_mode = input("Message mode (file/single): ").strip().lower()
 
-    if message_mode == "file":
-        file_path = input("Enter message file path: ")
-        with open(file_path, "r") as f:
-            messages = [line.strip() for line in f if line.strip()]
+    messages = []
+    if msg_mode == "file":
+        path = input("Enter message file path: ")
+        try:
+            with open(path, "r") as f:
+                messages = [x.strip() for x in f.readlines() if x.strip()]
+        except:
+            print(Fore.RED + "[!] Could not read message file.")
+            return
     else:
-        messages = [input("Enter your message: ")]
+        messages = [input("Enter message: ")]
 
-    delay = int(input("Message delay (seconds): "))
-    convo_name = input("Convo Name: ")
+    delay = int(input("Delay between messages (seconds): "))
+    convo_name = input("Conversation name: ")
 
     data = {
         "type": convo_type,
@@ -104,60 +142,75 @@ def start_convo():
     }
 
     try:
-        response = requests.post(f"{SERVER_URL}/start_convo", json=data)
-        print(GREEN + response.text + RESET)
-    except Exception as e:
-        print(RED + f"❌ Failed to connect to server: {e}" + RESET)
+        res = requests.post(f"{SERVER_URL}/start_convo", json=data)
+        print(Fore.GREEN + res.text)
+    except:
+        print(Fore.RED + "[!] Failed to contact server.")
 
-def view_convos():
+# View Conversations
+def view_active_convos():
     try:
         res = requests.get(f"{SERVER_URL}/view_convos")
         convos = res.json().get("conversations", [])
-        print(f"{YELLOW}Available Convos:{RESET}")
+        print(Fore.YELLOW + "\nActive Conversations:")
         for name in convos:
             print(f" - {name}")
-
-        convo_name = input("Enter convo name to view live: ")
-        r = requests.get(f"{SERVER_URL}/stream_convo/{convo_name}", stream=True)
-        print("\n--- Live Messages ---")
+        name = input("Enter convo name to view live: ")
+        r = requests.get(f"{SERVER_URL}/stream_convo/{name}", stream=True)
+        print(Fore.CYAN + "\n--- Live Messages ---")
         for line in r.iter_lines():
             print(line.decode())
     except KeyboardInterrupt:
-        print(RED + "\nStopped viewing." + RESET)
-    except Exception as e:
-        print(RED + f"❌ Error: {e}" + RESET)
+        pass
+    except:
+        print(Fore.RED + "[!] Failed to load messages.")
 
-def resume_convo():
+# Resume Previous Convo
+def resume_previous_convo():
     try:
         res = requests.get(f"{SERVER_URL}/resume_convos")
-        resumables = res.json().get("resumable", [])
-        print(f"{YELLOW}Resumable Convos:{RESET}")
-        for name in resumables:
+        convos = res.json().get("resumable", [])
+        print(Fore.YELLOW + "\nResumable Conversations:")
+        for name in convos:
             print(f" - {name}")
-
-        convo_name = input("Enter convo name to resume view: ")
-        r = requests.get(f"{SERVER_URL}/stream_resume/{convo_name}", stream=True)
-        print("\n--- Resume Stream ---")
+        name = input("Enter convo name to resume: ")
+        r = requests.get(f"{SERVER_URL}/stream_resume/{name}", stream=True)
+        print(Fore.CYAN + "\n--- Resume Messages ---")
         for line in r.iter_lines():
             print(line.decode())
     except KeyboardInterrupt:
-        print(RED + "\nStopped resume." + RESET)
-    except Exception as e:
-        print(RED + f"❌ Error: {e}" + RESET)
+        pass
+    except:
+        print(Fore.RED + "[!] Error resuming conversation.")
 
+# Stop Convo
 def stop_convo():
     try:
         res = requests.get(f"{SERVER_URL}/view_convos")
         convos = res.json().get("conversations", [])
-        print(f"{YELLOW}Running Convos:{RESET}")
+        print(Fore.YELLOW + "\nRunning Conversations:")
         for name in convos:
             print(f" - {name}")
+        name = input("Enter convo name to stop: ")
+        res = requests.post(f"{SERVER_URL}/stop_convo", json={"convo_name": name})
+        print(Fore.GREEN + res.text)
+    except:
+        print(Fore.RED + "[!] Error stopping conversation.")
 
-        convo_name = input("Enter convo name to stop: ")
-        res = requests.post(f"{SERVER_URL}/stop_convo", json={"convo_name": convo_name})
-        print(GREEN + res.text + RESET)
-    except Exception as e:
-        print(RED + f"❌ Error: {e}" + RESET)
-
+# Entry point
 if __name__ == "__main__":
+    os.system("clear")
+    print_logo()
+    show_login_time()
+    print()
+
+    username = input("Enter your username: ").strip()
+    password = input("Enter your password: ").strip()
+
+    if not check_approval(username, password):
+        print(Fore.RED + "\n[!] Access Denied. You are not approved.")
+        sys.exit()
+
+    print(Fore.GREEN + "\n✅ Access Approved!\n")
+    show_warning_note()
     main_menu()
